@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
-import PresensiForm from '../components/PresensiForm';
+import PresensiForm from '../models/PresensiForm';
 
 function DashboardPage() {
   const [user, setUser] = useState(null);

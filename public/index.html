@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,46 +7,25 @@
   <title>Aplikasi Presensi Supabase</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f5f5f5;
-      max-width: 400px;
-      margin: 2em auto;
-      padding: 1em;
-    }
-    input, button {
-      width: 100%;
-      padding: 0.7em;
-      margin: 0.5em 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .card {
-      background: #fff;
-      padding: 1.5em;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    h2, h3, h4 {
-      margin-top: 1em;
-    }
+    body { font-family: sans-serif; padding: 2em; background: #f5f5f5; }
+    input, button { padding: 0.5em; margin: 0.3em 0; width: 100%; }
+    .card { background: white; padding: 1em; margin-top: 1em; border-radius: 8px; }
   </style>
 </head>
 <body>
 
-  <h2>Aplikasi Presensi</h2>
-
-  <div class="card" id="login-card">
+  <h2>Login Presensi</h2>
+  <div class="card">
     <input id="email" type="email" placeholder="Email" />
     <input id="password" type="password" placeholder="Password" />
     <button onclick="login()">Login</button>
   </div>
 
-  <div class="card" id="dashboard-card" style="display: none;">
+  <div class="card" id="loggedin" style="display:none;">
     <p>Halo, <span id="username">User</span> 👋</p>
     <button onclick="logout()">Logout</button>
 
-    <h3>Isi Presensi</h3>
+    <h3>Presensi Hari Ini</h3>
     <input id="kelas_id" type="text" placeholder="ID Kelas (uuid)" />
     <input id="lokasi" type="text" placeholder="Lokasi/IP" />
     <button onclick="isiPresensi()">Isi Presensi</button>
@@ -55,14 +35,16 @@
   </div>
 
   <script>
-    // GANTI dengan URL dan Key dari Supabase Project-mu
-    const SUPABASE_URL = 'https://your-project.supabase.co';
-    const SUPABASE_KEY = 'your-anon-public-key';
+    // GANTI ini dengan kredensial project kamu
+    const SUPABASE_URL = 'https://owlntqlcwpexqkqwmort.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93bG50cWxjd3BleHFrcXdtb3J0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1OTc2OTMsImV4cCI6MjA2OTE3MzY5M30.BmloQNVfX__Vb8xdVWvv7VkkXL2KU11tni1-d3h-gaw';
+
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function login() {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
@@ -74,16 +56,14 @@
 
     async function logout() {
       await supabase.auth.signOut();
-      document.getElementById('dashboard-card').style.display = 'none';
-      document.getElementById('login-card').style.display = 'block';
+      document.getElementById('loggedin').style.display = 'none';
     }
 
     async function loadUser() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        document.getElementById('loggedin').style.display = 'block';
         document.getElementById('username').textContent = user.email;
-        document.getElementById('login-card').style.display = 'none';
-        document.getElementById('dashboard-card').style.display = 'block';
         loadPresensi(user.id);
       }
     }
@@ -98,7 +78,7 @@
         .insert([{ user_id: user.id, kelas_id, lokasi, status: 'hadir' }]);
 
       if (error) {
-        alert('Presensi gagal: ' + error.message);
+        alert('Gagal presensi: ' + error.message);
       } else {
         alert('Presensi berhasil!');
         loadPresensi(user.id);
@@ -112,18 +92,18 @@
         .eq('user_id', user_id)
         .order('waktu_presensi', { ascending: false });
 
-      const riwayatList = document.getElementById('riwayat');
-      riwayatList.innerHTML = '';
+      const ul = document.getElementById('riwayat');
+      ul.innerHTML = '';
       if (data) {
         data.forEach(item => {
           const li = document.createElement('li');
-          li.textContent = `${item.waktu_presensi || '(no date)'} | Lokasi: ${item.lokasi}`;
-          riwayatList.appendChild(li);
+          li.textContent = `${item.waktu_presensi} | Lokasi: ${item.lokasi}`;
+          ul.appendChild(li);
         });
       }
     }
 
-    // Jalankan saat halaman pertama kali dibuka
+    // Cek login saat halaman dibuka
     loadUser();
   </script>
 
